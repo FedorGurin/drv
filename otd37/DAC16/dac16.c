@@ -13,24 +13,26 @@
 
 
 
-#define DAC16_BASE_ADDRS "0x240"
+//#define DAC16_BASE_ADDRS "0x240"
 
 #define DAC16_CHN_PORT(dev)         (dev->baseAddr + 0x2) /* Номер канала */
 #define DAC16_VCODE_PORT(dev)       (dev->baseAddr)       /* Код напряжения (данные по адресу) */
 
 #define CODE_BY_VOLTAGE(v) (int) (((v + 10) * 8191.0)/20)
   
+#define MAX_DAC16 8
 struct dac16_drv_inst {
-    uint16_t baseAddr;
-    DEV_HDR *pDevHdr;
+    uint16_t *baseAddr[MAX_DAC16];
     SEM_ID sem;
-    int configured;   
+    DEV_HDR *pDevHdr;
+
+    //int configured;
     struct dac16_drv_inst *next;
 };
 
-static int dac16IosLoaded = 0;
+//static int dac16IosLoaded = 0;
 //static char *config = NULL;
-static struct dac16_drv_inst *dac16Devs=NULL;
+//static struct dac16_drv_inst *dac16Devs=NULL;
 static int dac16IosDrvNum = -1;
 
 /* Forward declarations */
@@ -44,7 +46,7 @@ int dac16IosIoctl(struct dac16_drv_inst *pDrvInst, int function, int arg);
 
 
 
-int dac16IosDrv(void)
+/*int dac16IosDrv(void)
 {
     if (dac16IosDrvNum > 0)
         return OK;
@@ -59,31 +61,30 @@ int dac16IosDrv(void)
     if (dac16IosDrvNum < 0)
         return ERROR;
     return OK;
-}
+}*/
 
-int dac16IosDevAdd(int addr)
+void dac16IosDevAdd()
 {
-	        
-    static int devCount = 0;
+    struct dac16_drv_inst *tmp, *inst;
     DEV_HDR *pDevHdr;
-    static struct dac16_drv_inst *last = NULL;
-    struct dac16_drv_inst *inst = NULL;
+
     int i;
     char buffer[20];
     
     pDevHdr = (DEV_HDR *) malloc(sizeof(DEV_HDR));
     if (pDevHdr == NULL) {
-   	            return ERROR;
-   	        }
+             return ERROR;
+    }
+    tmp = trrel48InstsLL;
     inst = (struct dac16_drv_inst *) malloc(sizeof(struct dac16_drv_inst));
     if (inst == NULL) {
-    	            free(pDevHdr);
-    	            return ERROR;
-    	        }
-    
-    inst->baseAddr = addr;
-    inst->pDevHdr = pDevHdr;
+        free(pDevHdr);
+        return ERROR;
+    }
+    memset( (void *)inst, 0, sizeof(struct trrel48DrvInst));
+
     inst->sem = semMCreate(SEM_Q_FIFO);
+    inst->pDevHdr = pDevHdr;   
     inst->configured = 0;
         
     sprintf(buffer, "%s%d", DAC16_DEVPATH, devCount++);
@@ -101,29 +102,44 @@ int dac16IosDevAdd(int addr)
    
 }
 
-int dac16IosInit(void)
+void dac16IosInit(void)
 {
     char *me = "dac16IosInit()";
-    STATUS s;
-    char *addrs = DAC16_BASE_ADDRS;
-	char *token;
-	int addr;
-    
-    if (dac16IosLoaded)
-        return OK;
-    
-    if ( (s = dac16IosDrv()) == ERROR)
+
+    if (dac16IosDrvNum!=-1)
+        return;
+    dac16IosDrvNum = iosDrvInstall(
+            NULL,
+            NULL,
+            dac16IosOpen,
+            dac16IosClose,
+            NULL,
+            dac16IosWrite,
+            dac16IosIoctl);
+    if (dac16IosDrvNum >0)
         return ERROR;
-    token = strtok(addrs, ",");
-    while (token != NULL) {
-    	  addr = strtol(token, NULL, 0);
-    	  if (addr)
-            dac16IosDevAdd(addr);
-        else
-            printf("%s: bad address: %s. Ignoring.\n", me, token);
-        token = strtok(NULL, ",");
-    }
-    return OK;  
+    return OK;
+
+//    STATUS s;
+//    char *addrs = DAC16_BASE_ADDRS;
+//	char *token;
+//	int addr;
+    
+//    if (dac16IosLoaded)
+//        return OK;
+    
+//    if ( (s = dac16IosDrv()) == ERROR)
+//        return ERROR;
+//    token = strtok(addrs, ",");
+//    while (token != NULL) {
+//    	  addr = strtol(token, NULL, 0);
+//    	  if (addr)
+//            dac16IosDevAdd(addr);
+//        else
+//            printf("%s: bad address: %s. Ignoring.\n", me, token);
+//        token = strtok(NULL, ",");
+//    }
+//    return OK;
 }
 
 int dac16IosOpen(DEV_HDR *pDevHdr, char *remainder, int flags, int mode)

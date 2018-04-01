@@ -15,7 +15,7 @@ static int rsrel48DrvNum = -1;
 
 struct rsrel48DrvInst {
     //! массив базовых адресов
-    uint32_t *baseAddr[MAX_RSREL48]; 
+    uint16_t *baseAddr[MAX_RSREL48];
     //! кол-во базовых адресов в массиве
     uint8_t numBaseAddr;
     SEM_ID sem;

@@ -12,11 +12,10 @@
 
 
 #define MAX_TRREL48 8
-static int trrel48DrvNum = -1;
+static int trrel48DrvInit = -1;
 
 struct trrel48DrvInst {
-	//!   
-    uint32_t *baseAddr[MAX_TRREL48]; 
+    uint16_t *baseAddr[MAX_TRREL48];
     //! -    
     uint8_t numBaseAddr;
     SEM_ID sem;
@@ -37,18 +36,21 @@ int trrel48IosIoctl(struct trrel48DrvInst *pInst, int function, int arg);
 
 void trrel48IosDevAdd()
 {
-    static int devCount = 0;
     struct trrel48DrvInst *tmp, *inst;
     DEV_HDR *pDevHdr;
-    int i;
+
     char buffer[20];
     
     pDevHdr = (DEV_HDR *) malloc(sizeof(DEV_HDR));
+    if (pDevHdr == NULL){
+            return ERROR;
+    }
     tmp = trrel48InstsLL;
     inst = (struct trrel48DrvInst *) malloc(sizeof(struct trrel48DrvInst));
     if (inst == NULL) {
-           return;
-       }
+           free(pDevHdr);
+           return ERROR;
+    }
     memset( (void *)inst, 0, sizeof(struct trrel48DrvInst));    
            
     inst->sem = semMCreate(SEM_Q_FIFO);
@@ -63,16 +65,16 @@ void trrel48IosDevAdd()
         tmp->next = inst;
     }
     sprintf(buffer, "%s", TRREL48_DEVPATH);
-    iosDevAdd(pDevHdr, buffer, trrel48DrvNum);
+    iosDevAdd(pDevHdr, buffer, trrel48DrvInit);
 }
 
 void trrel48IosInit(void)
 {
     char *me = "trrel48IosInit()";
-    
-    if (trrel48DrvNum <= 0)
-        trrel48DrvNum = iosDrvInstall(NULL, NULL, trrel48IosOpen, trrel48IosClose, NULL, trrel48IosWrite, trrel48IosIoctl); 
-    if (trrel48DrvNum > 0)
+    if(trrel48DrvInit!=-1)
+        return;
+    trrel48DrvInit = iosDrvInstall(NULL, NULL, trrel48IosOpen, trrel48IosClose, NULL, trrel48IosWrite, trrel48IosIoctl);
+    if (trrel48DrvInit > 0)
         trrel48IosDevAdd();
 }
 
