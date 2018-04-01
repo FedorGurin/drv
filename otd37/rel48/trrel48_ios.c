@@ -9,17 +9,14 @@
 #include <string.h>
 #include "trrel48.h"
 
-
-
 #define MAX_TRREL48 8
 static int trrel48DrvInit = -1;
 
 struct trrel48DrvInst {
-    uint16_t *baseAddr[MAX_TRREL48];
-    //! -    
-    uint8_t numBaseAddr;
-    SEM_ID sem;
-    DEV_HDR *pDevHdr;
+    uint16_t   *baseAddr[MAX_TRREL48];
+    uint8_t     numBaseAddr;
+    SEM_ID      sem;
+    DEV_HDR    *pDevHdr;
     struct trrel48DrvInst *next;
     int currentState[MAX_TRREL48 * REL48_REGS];
 };
@@ -80,8 +77,8 @@ void trrel48IosInit(void)
 
 int trrel48IosOpen(DEV_HDR *pDevHdr, char *remainder, int flags, int mode)
 {
-	struct trrel48DrvInst *tmp;
-	
+    struct trrel48DrvInst *tmp;
+
     if (remainder != NULL && *remainder != '\0') {
         errnoSet(ENODEV);
         return ERROR;
@@ -105,12 +102,12 @@ int trrel48IosClose(struct trrel48DrvInst *pInst)
 }
 int trrel48IosRead(struct trrel48DrvInst *pInst, void *buffer, int nBytes)
 {
-	if(pInst->numBaseAddr == 0)
-	{
-		errnoSet(EINVAL);
-		return ERROR;
-	}	
-	
+    if(pInst->numBaseAddr == 0)
+    {
+        errnoSet(EINVAL);
+        return ERROR;
+    }
+
     if (nBytes < sizeof(int) * MAX_TRREL48 * pInst->numBaseAddr) {
         errnoSet(EINVAL);
         return ERROR;
@@ -121,18 +118,18 @@ int trrel48IosRead(struct trrel48DrvInst *pInst, void *buffer, int nBytes)
 
 int trrel48IosWrite(struct trrel48DrvInst *pInst, void *buffer, int nBytes)
 {
-	struct trrel48WriteCmd *cmd;
-	int maxCh=0,i=0,j=0,bit;
-	int word;
-	int bitsRead=0; 
-	maxCh = REL48_CHANNELS_PER_BOARD * pInst->numBaseAddr;
-	
-	if(pInst->numBaseAddr == 0)
-	{
-		errnoSet(ENODEV);
-		return ERROR;
-	}		
-	if (nBytes != sizeof(struct trrel48WriteCmd)) {
+    struct trrel48WriteCmd *cmd;
+    int maxCh=0,i=0,j=0,bit;
+    int word;
+    int bitsRead=0;
+    maxCh = REL48_CHANNELS_PER_BOARD * pInst->numBaseAddr;
+
+    if(pInst->numBaseAddr == 0)
+    {
+        errnoSet(ENODEV);
+        return ERROR;
+    }
+    if (nBytes != sizeof(struct trrel48WriteCmd)) {
         errnoSet(EINVAL);
         return ERROR;
     }
@@ -160,17 +157,16 @@ int trrel48IosWrite(struct trrel48DrvInst *pInst, void *buffer, int nBytes)
 
 int trrel48IosIoctl(struct trrel48DrvInst *pInst, int function, int arg)
 {
-	int i=0;
-	if(function == REL48_IO_ADD_BASE_ADR)
-	{
-		pInst->baseAddr[pInst->numBaseAddr] = (uint32_t*)arg;
-		for (i = 0; i < REL48_REGS; i++) 
-		{
-			pInst->currentState[i] = sysInWord((ULONG)pInst->baseAddr[pInst->numBaseAddr] + 2 * i);
-		}		
-		pInst->numBaseAddr++;
-		return OK;
-	}	
+    if(function == REL48_IO_ADD_BASE_ADR)
+    {
+        pInst->baseAddr[pInst->numBaseAddr] = (uint32_t*)arg;
+        for (i = 0; i < REL48_REGS; i++)
+        {
+            pInst->currentState[i] = sysInWord((ULONG)pInst->baseAddr[pInst->numBaseAddr] + 2 * i);
+        }
+        pInst->numBaseAddr++;
+        return OK;
+    }
     errnoSet(ENOSYS);
     return ERROR;
 }

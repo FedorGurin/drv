@@ -9,6 +9,7 @@
 struct trrel48WriteCmd {
     unsigned startChannel;
     unsigned channelCount;
+    //! значения по указанным каналам
     uint8_t values[REL48_CHANNELS_PER_BOARD * REL48_MAX_ADAPTER];
 };
 

@@ -78,8 +78,8 @@ void rsrel48IosInit(void)
 
 int rsrel48IosOpen(DEV_HDR *pDevHdr, char *remainder, int flags, int mode)
 {
-	struct rsrel48DrvInst *devInst = rsrel48InstsLL;
-	
+    struct rsrel48DrvInst *devInst = rsrel48InstsLL;
+
     if (remainder != NULL && *remainder != '\0') {
         errnoSet(ENODEV);
         return ERROR;
@@ -104,18 +104,18 @@ int rsrel48IosClose(struct rsrel48DrvInst *pInst)
 
 int rsrel48IosRead(struct rsrel48DrvInst *pInst, void *buffer, int nBytes)
 {
-	struct rsrel48ReadCmd *cmd = (struct rsrel48ReadCmd *) buffer;
-	int bit, word, bitsRead = 0, i = 0, j = 0;
-	int maxCh=0;
-	    
-	maxCh = REL48_CHANNELS_PER_BOARD * pInst->numBaseAddr;
-		
-	if(pInst->numBaseAddr == 0)
-	{
-	    errnoSet(ENODEV);
-	    return ERROR;
-	}
-	if (nBytes != sizeof(struct rsrel48ReadCmd)) {
+    struct rsrel48ReadCmd *cmd = (struct rsrel48ReadCmd *) buffer;
+    int bit, word, bitsRead = 0, i = 0, j = 0;
+    int maxCh=0;
+
+    maxCh = REL48_CHANNELS_PER_BOARD * pInst->numBaseAddr;
+
+    if(pInst->numBaseAddr == 0)
+    {
+        errnoSet(ENODEV);
+        return ERROR;
+    }
+    if (nBytes != sizeof(struct rsrel48ReadCmd)) {
         errnoSet(EINVAL);
         return ERROR;
     }
@@ -142,17 +142,16 @@ int rsrel48IosRead(struct rsrel48DrvInst *pInst, void *buffer, int nBytes)
 
 int rsrel48IosIoctl(struct rsrel48DrvInst *pInst, int function, int arg)
 {
-    int i=0;
-        if(function == REL48_IO_ADD_BASE_ADR)
-        {
-            pInst->baseAddr[pInst->numBaseAddr] = (uint32_t*)arg;
-//            for (i = 0; i < REL48_REGS; i++) 
-//            {
-//                pInst->currentState[i] = sysInWord((ULONG)pInst->baseAddr[pInst->numBaseAddr] + 2 * i);
-//            }       
-            pInst->numBaseAddr++;
-            return OK;
-        }   
+    if(function == REL48_IO_ADD_BASE_ADR)
+    {
+        pInst->baseAddr[pInst->numBaseAddr] = (uint32_t*)arg;
+        //            for (i = 0; i < REL48_REGS; i++)
+        //            {
+        //                pInst->currentState[i] = sysInWord((ULONG)pInst->baseAddr[pInst->numBaseAddr] + 2 * i);
+        //            }
+        pInst->numBaseAddr++;
+        return OK;
+    }
 
     errnoSet(ENOSYS);
     return ERROR;
