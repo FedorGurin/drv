@@ -1,0 +1,3 @@
+#ifdef DRV_DEMO_WRSAMPLE
+    wrsampleRegister();
+#endif /* DRV_DEMO_WRSAMPLE */
